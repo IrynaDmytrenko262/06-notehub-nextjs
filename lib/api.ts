@@ -1,77 +1,50 @@
-import axios from "axios";
-import type { Note, NoteTag } from "../types/note";
+import axios from 'axios';
+import type { Note } from '../types/note';
 
-// =====================
-// Axios instance
-// =====================
-
-const BASE_URL = "https://notehub-public.goit.study/api";
-const token = process.env.NEXT_PUBLIC_NOTEHUB_TOKEN;
-
-if (!token) {
-  throw new Error("NEXT_PUBLIC_NOTEHUB_TOKEN is not defined");
-}
-
-export const noteHubApi = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-});
-
-// =====================
-// Типи для сервісу
-// =====================
-
-export interface FetchNotesParams {
-  page: number;
-  perPage: number;
-  search?: string;
-}
-
-export interface FetchNotesResponse {
+interface ApiResponse {
   notes: Note[];
   totalPages: number;
 }
 
-export interface CreateNoteParams {
+interface NewNote {
   title: string;
   content: string;
-  tag: NoteTag;
+  tag: string;
 }
 
-// =====================
-// API функції
-// =====================
+const noteApi = axios.create({
+  baseURL: 'https://notehub-public.goit.study/api',
+  headers: {
+    Authorization: `Bearer ${process.env.NEXT_PUBLIC_NOTEHUB_TOKEN}`,
+  },
+});
 
 export const fetchNotes = async (
-  params?: FetchNotesParams
-): Promise<FetchNotesResponse> => {
-  const { data } = await noteHubApi.get<FetchNotesResponse>("/notes", {
+  searchText: string,
+  page: number = 1,
+  perPage: number = 12,
+): Promise<ApiResponse> => {
+  const response = await noteApi.get<ApiResponse>('/notes', {
     params: {
-      page: params?.page ?? 1,
-      perPage: params?.perPage ?? 12,
-      search: params?.search ?? "",
+      search: searchText,
+      page: page,
+      perPage: perPage,
     },
   });
-
-  return data;
+  return response.data;
 };
 
-export const createNote = async (
-  noteData: CreateNoteParams
-): Promise<Note> => {
-  const { data } = await noteHubApi.post<Note>("/notes", noteData);
-
-  return data;
+export const createNote = async (newNote: NewNote) => {
+  const response = await noteApi.post<Note>('/notes', newNote);
+  return response.data;
 };
 
-export const deleteNote = async (id: string): Promise<Note> => {
-  const { data } = await noteHubApi.delete<Note>(`/notes/${id}`);
-  return data;
+export const deleteNote = async (noteId: string) => {
+  const response = await noteApi.delete<Note>(`/notes/${noteId}`);
+  return response.data;
 };
 
-export const fetchNoteById = async (id: string): Promise<Note> => {
-  const { data } = await noteHubApi.get<Note>(`/notes/${id}`);
-  return data;
+export const fetchNoteById = async (noteId: string) => {
+  const response = await noteApi.get<Note>(`/notes/${noteId}`);
+  return response.data;
 };
